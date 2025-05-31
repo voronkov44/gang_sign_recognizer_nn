@@ -1,0 +1,5 @@
+MODEL_PATH = "gang_sign_model.pkl"
+INPUT_SIZE = 64*64
+HIDDEN_SIZES = [128, 64]
+OUTPUT_SIZE = 10
+MIN_CONFIDENCE = 0.6
