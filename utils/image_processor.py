@@ -3,7 +3,7 @@ import numpy as np
 
 
 class ImageProcessor:
-    # Оптимальные параметры для детекции кожи (можно настроить)
+    # Оптимальные параметры для детекции кожи
     SKIN_LOWER = np.array([0, 135, 85], dtype=np.uint8)
     SKIN_UPPER = np.array([255, 180, 135], dtype=np.uint8)
     MORPH_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
