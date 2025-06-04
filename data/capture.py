@@ -8,21 +8,12 @@ class DataCapture:
         self.output_dir = output_dir
         self.class_names = {
             0: "Westcoast",
-            1: "Eastcoast",
-            2: "Crips",
-            3: "Bloods",
-            4: "Crip Killa",
-            5: "b.k",
-            6: "MS-13",
-            7: "Latin kings",
-            8: "Piru",
-            9: "Ronaldinho",
-            10: "Kiz",
-            11: "Players club",
-            12: "Cigarettes",
-            13: "52",
-            14: "Simple",
-            15: "Other"
+            1: "Crips",
+            2: "MS-13",
+            3: "Latin kings",
+            4: "Ronaldinho",
+            5: "Players club",
+            6: "Simple"
         }
         self.num_classes = len(self.class_names)
 
