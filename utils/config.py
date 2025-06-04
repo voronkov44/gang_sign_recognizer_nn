@@ -1,4 +1,4 @@
-MODEL_PATH = "gang_sign_model.pkl"
+MODEL_PATH = "gang_sign_model_new1.pkl"
 INPUT_SIZE = 64*64
 HIDDEN_SIZES = [128, 64]
 OUTPUT_SIZE = 10
