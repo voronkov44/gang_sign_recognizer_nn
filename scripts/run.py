@@ -90,7 +90,16 @@ class GangSignRecognizer:
 
     def create_info_window(self, gesture_name):
         """Создает информационное окно с изображением и текстом"""
-        info = GESTURE_INFO.get(gesture_name, GESTURE_INFO["Other"])
+        info = GESTURE_INFO.get(gesture_name)
+
+        # Если жеста нет в словаре, создаем пустую информацию
+        if info is None:
+            info = {
+                "description": "Информация об этом жесте отсутствует",
+                "history": "",
+                "meaning": "",
+                "image": None
+            }
 
         # Создаем основное изображение для окна
         info_img = np.zeros((600, 500, 3), dtype=np.uint8)
@@ -130,6 +139,7 @@ class GangSignRecognizer:
 
         return info_img
 
+
     def wrap_text(self, text, max_width):
         """Переносит текст по словам"""
         words = text.split()
@@ -162,7 +172,7 @@ class GangSignRecognizer:
         cv2.resizeWindow("Gesture Info", 500, 600)
         cv2.imshow("Gesture Info", np.zeros((600, 500, 3), dtype=np.uint8))
 
-        current_gesture = None
+        current_gesture = None  # Инициализируем как None
         confidence = 0.0
 
         try:
