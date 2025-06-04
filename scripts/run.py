@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 from collections import deque
 from models.model_manager import ModelManager
-from models.neural_network import NeuralNetwork
 from utils.image_processor import ImageProcessor
 import os
 import sys
@@ -34,11 +33,17 @@ class GangSignRecognizer:
                 error_msg += "Нет доступных моделей. Сначала обучите модель."
             raise ValueError(error_msg)
 
-        # Загружаем модель
-        manager = ModelManager()
-        self.model = manager.load_model(model_suffix)
+        # Загружаем модель через ModelManager
+        self.manager = ModelManager()
+        self.model = self.manager.load_model(model_suffix)
         if self.model is None:
-            self.model = NeuralNetwork(64 * 64, [128, 64], self.num_classes)
+            # Создаем новую модель через менеджер
+            self.model = self.manager.create_new_model(
+                input_size=64 * 64,
+                hidden_sizes=[128, 64],
+                output_size=self.num_classes,
+                model_type="backpropagation"  # или "gradient_descent" по вашему выбору
+            )
             if os.path.exists(model_file):
                 self.model.load_model(model_file)
             else:
@@ -46,7 +51,7 @@ class GangSignRecognizer:
 
         if self.model.layer_sizes[-1] != self.num_classes:
             raise ValueError(f"Модель ожидает {self.model.layer_sizes[-1]} классов, "
-                             f"но определено {self.num_classes} классов")
+                           f"но определено {self.num_classes} классов")
 
         self.prediction_history = deque(maxlen=15)
         self.confidence_history = deque(maxlen=15)
@@ -61,7 +66,6 @@ class GangSignRecognizer:
             print(f"Предупреждение: папка с изображениями жестов не найдена: {self.gesture_images_dir}")
 
     def put_russian_text(self, img, text, position, font_scale, color, thickness):
-        """Отображает русский текст на изображении"""
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(img, text, position, font, font_scale, color, thickness, cv2.LINE_AA)
 
@@ -172,7 +176,7 @@ class GangSignRecognizer:
         cv2.resizeWindow("Gesture Info", 500, 600)
         cv2.imshow("Gesture Info", np.zeros((600, 500, 3), dtype=np.uint8))
 
-        current_gesture = None  # Инициализируем как None
+        current_gesture = None
         confidence = 0.0
 
         try:
@@ -185,6 +189,7 @@ class GangSignRecognizer:
 
                 if processed is not None:
                     try:
+                        # Используем метод predict_proba модели
                         probs = self.model.predict_proba(processed.reshape(1, -1))
                         prediction = np.argmax(probs)
                         confidence = np.max(probs)
@@ -210,7 +215,7 @@ class GangSignRecognizer:
 
                         # Отображаем русский текст на основном окне
                         self.put_russian_text(frame, f"{current_gesture} ({confidence:.2f})",
-                                              (x, y - 10), 0.7, (0, 255, 0), 2)
+                                            (x, y - 10), 0.7, (0, 255, 0), 2)
 
                     except Exception as e:
                         print(f"Ошибка при обработке кадра: {str(e)}")
@@ -230,7 +235,7 @@ class GangSignRecognizer:
 
                 # Инструкция на русском
                 self.put_russian_text(frame, "Click 'q' for exit | 'p' for information",
-                                      (10, 30), 0.7, (0, 0, 255), 2)
+                                    (10, 30), 0.7, (0, 0, 255), 2)
                 cv2.imshow("Gang Sign Recognizer", frame)
 
                 key = cv2.waitKey(30) & 0xFF
@@ -254,9 +259,9 @@ class GangSignRecognizer:
 def main():
     parser = argparse.ArgumentParser(description="Распознавание жестов бандитских группировок")
     parser.add_argument("--camera", type=int, default=0,
-                        help="Индекс камеры (0 - встроенная, 1 - внешняя и т.д.)")
+                      help="Индекс камеры (0 - встроенная, 1 - внешняя и т.д.)")
     parser.add_argument("--model", type=str, default="",
-                        help="Суффикс модели (например, '_v2' для gang_sign_model_v2.pkl)")
+                      help="Суффикс модели (например, '_v2' для gang_sign_model_v2.pkl)")
 
     args = parser.parse_args()
 

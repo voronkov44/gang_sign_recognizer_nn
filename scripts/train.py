@@ -1,54 +1,63 @@
 import argparse
-
 import numpy as np
-
 from models.model_manager import ModelManager
-from data.dataset import DatasetLoader
-from data.augment import DataAugmentor
+import os
+
+
+def load_data(data_dir):
+    X = []
+    y = []
+
+    for class_id in os.listdir(data_dir):
+        class_dir = os.path.join(data_dir, class_id)
+        if not os.path.isdir(class_dir):
+            continue
+
+        for sample_file in os.listdir(class_dir):
+            if sample_file.endswith('.npy'):
+                sample_path = os.path.join(class_dir, sample_file)
+                data = np.load(sample_path)
+                X.append(data.flatten())
+                y.append(int(class_id))
+
+    return np.array(X), np.array(y)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train gang sign recognition model")
-    parser.add_argument("--data", type=str, default="training_data", help="Data directory")
-    parser.add_argument("--suffix", type=str, default="", help="Model suffix")
+    parser = argparse.ArgumentParser(description="Обучение модели распознавания жестов")
+    parser.add_argument("--data", required=True, help="Путь к папке с данными")
+    parser.add_argument("--suffix", default="", help="Суффикс для имени модели")
+    parser.add_argument("--algorithm", default="backpropagation",
+                        choices=["backpropagation", "gradient_descent"],
+                        help="Алгоритм обучения")
+    parser.add_argument("--learning_rate", type=float, default=0.001,
+                        help="Скорость обучения")
+    parser.add_argument("--epochs", type=int, default=1000,
+                        help="Количество эпох обучения")
 
     args = parser.parse_args()
 
-    print("Loading training data...")
-    try:
-        X, y = DatasetLoader.load_training_data(args.data)
-        num_classes = len(np.unique(y))
-        print(f"Количество классов в данных: {num_classes}")
-    except Exception as e:
-        print(f"Ошибка загрузки данных: {str(e)}")
-        return
+    # Загрузка данных
+    X, y = load_data(args.data)
+    input_size = X.shape[1]
+    output_size = len(np.unique(y))
 
-    print("Augmenting data...")
-    X_aug, y_aug = DataAugmentor.augment_data(X, y)
-    print(f"После аугментации: {X_aug.shape[0]} образцов")
-
-    print("Creating model...")
+    # Создание модели
     manager = ModelManager()
-    try:
-        model = manager.create_new_model(64 * 64, [128, 64], num_classes)
-        print(f"Создана модель с {num_classes} выходными нейронами")
-    except Exception as e:
-        print(f"Ошибка создания модели: {str(e)}")
-        return
+    model = manager.create_new_model(
+        input_size=input_size,
+        hidden_sizes=[128, 64],
+        output_size=output_size,
+        model_type=args.algorithm,
+        learning_rate=args.learning_rate
+    )
 
-    print("Training model...")
-    try:
-        model.train(X_aug, y_aug, epochs=2000)  # Увеличили количество эпох
-    except Exception as e:
-        print(f"Ошибка обучения: {str(e)}")
-        return
+    # Обучение модели
+    model.train(X, y, epochs=args.epochs)
 
-    print("Saving model...")
-    try:
-        saved_file = manager.save_model(args.suffix)
-        print(f"Модель сохранена в {saved_file}")
-    except Exception as e:
-        print(f"Ошибка сохранения модели: {str(e)}")
+    # Сохранение модели
+    model_file = manager.save_model(args.suffix)
+    print(f"Модель сохранена как {model_file}")
 
 
 if __name__ == "__main__":
