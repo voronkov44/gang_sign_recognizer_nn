@@ -17,7 +17,7 @@ class DataCapture:
         }
         self.num_classes = len(self.class_names)
 
-    def capture(self, camera_index=0, samples_per_class=50):
+    def capture(self, camera_index=0, samples_per_class=700):
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 

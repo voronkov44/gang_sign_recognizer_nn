@@ -6,7 +6,7 @@ def main():
     parser = argparse.ArgumentParser(description="Capture gang sign training data")
     parser.add_argument("--camera", type=int, default=0, help="Camera index (0-iPhone, 1-Mac)")
     parser.add_argument("--output", type=str, default="training_data", help="Output directory")
-    parser.add_argument("--samples", type=int, default=50, help="Samples per class")
+    parser.add_argument("--samples", type=int, default=700, help="Samples per class")
 
     args = parser.parse_args()
 
