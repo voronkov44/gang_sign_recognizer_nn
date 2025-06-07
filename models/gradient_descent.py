@@ -1,12 +1,21 @@
 import numpy as np
 from models.neural_network import BaseNeuralNetwork
 
+# learning_rate — скорость обучения (шаг градиентного спуска)
+#
+# reg_lambda — коэффициент регуляризации (для борьбы с переобучением)
+
 class GradientDescentNN(BaseNeuralNetwork):
     def __init__(self, input_size, hidden_sizes, output_size, learning_rate=0.001, reg_lambda=0.0001):
         super().__init__(input_size, hidden_sizes, output_size)
         self.learning_rate = learning_rate
         self.reg_lambda = reg_lambda
 
+    # Вычисляет функцию потерь:
+    #
+    # кросс-энтропия между предсказанными вероятностями и истинными метками классов.
+    #
+    # регуляризационное слагаемое — сумма квадратов весов * регулятор reg_lambda
     def compute_loss(self, y):
         m = y.shape[0]
         probs = self.activations[-1]
@@ -16,25 +25,30 @@ class GradientDescentNN(BaseNeuralNetwork):
         reg_loss = 0.5 * self.reg_lambda * sum(np.sum(w * w) for w in self.weights)
         return data_loss + reg_loss
 
+    # 1.Инициализирует списки для градиентов весов и смещений.
     def backward(self, X, y):
         m = y.shape[0]
         grads_w = [np.zeros_like(w) for w in self.weights]
         grads_b = [np.zeros_like(b) for b in self.biases]
 
+        # 2.Вычисляет ошибку (дельту) на выходном слое:
         delta = self.activations[-1].copy()
         delta[range(m), y] -= 1
         delta /= m
 
+
         grads_w[-1] = np.dot(self.activations[-2].T, delta) + self.reg_lambda * self.weights[-1]
         grads_b[-1] = np.sum(delta, axis=0, keepdims=True)
 
+        # 3.Цикл от выходного слоя к первому
         for l in range(len(self.weights) - 2, -1, -1):
-            delta = np.dot(delta, self.weights[l + 1].T) * self.relu_derivative(self.z_values[l])
-            grads_w[l] = np.dot(self.activations[l].T, delta) + self.reg_lambda * self.weights[l]
-            grads_b[l] = np.sum(delta, axis=0, keepdims=True)
+            delta = np.dot(delta, self.weights[l + 1].T) * self.relu_derivative(self.z_values[l]) # пересчитывает дельту для предыдущего слоя (через веса следующего слоя)
+            grads_w[l] = np.dot(self.activations[l].T, delta) + self.reg_lambda * self.weights[l] # считает градиенты для весов и смещений текущего слоя
+            grads_b[l] = np.sum(delta, axis=0, keepdims=True) # добавляет регуляризацию к градиенту весов
 
         # Обновление весов с помощью градиентного спуска
         for i in range(len(self.weights)):
+            # 4.После подсчёта градиентов — обновляет веса и смещения:
             self.weights[i] -= self.learning_rate * grads_w[i]
             self.biases[i] -= self.learning_rate * grads_b[i]
 

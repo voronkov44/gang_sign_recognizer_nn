@@ -1,18 +1,24 @@
 import numpy as np
 from models.neural_network import BaseNeuralNetwork
 
+# learning_rate — шаг обучения
+#
+# reg_lambda — коэффициент L2-регуляризации
+#
+# momentum — инерция для ускорения сходимости
 class BackpropagationNN(BaseNeuralNetwork):
     def __init__(self, input_size, hidden_sizes, output_size, learning_rate=0.001, reg_lambda=0.0001, momentum=0.9):
         super().__init__(input_size, hidden_sizes, output_size)
         self.learning_rate = learning_rate
         self.reg_lambda = reg_lambda
         self.momentum = momentum
+        # Инициализируем скорости изменений весов и смещений (сдвиги)
         self.v_weights = [np.zeros_like(w) for w in self.weights]
         self.v_biases = [np.zeros_like(b) for b in self.biases]
 
     def compute_loss(self, y):
         m = y.shape[0]
-        probs = self.activations[-1]
+        probs = self.activations[-1] # выходная активация
         clipped_probs = np.clip(probs, 1e-12, 1.0 - 1e-12)
         correct_log_probs = -np.log(clipped_probs[range(m), y])
         data_loss = np.sum(correct_log_probs) / m
